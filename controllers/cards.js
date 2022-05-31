@@ -48,7 +48,7 @@ const deleteCard = (req, res) => {
       }
     })
     .catch(() => {
-      res.status(404).send({ message: 'Card not found or id is not correct' });
+      res.status(400).send({ message: 'Card not found or id is not correct' });
     });
 };
 
