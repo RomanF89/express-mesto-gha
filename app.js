@@ -21,7 +21,7 @@ app.use('/cards', cardRouter);
 
 app.use('/users', userRouter);
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).send({ message: "Sorry can't find that!" });
 });
 
