@@ -61,8 +61,7 @@ const upadateProfile = (req, res) => {
     new: true, runValidators: true,
   })
     .then((userData) => {
-      // console.log(userData);
-      res.status(200).send({ message: `${userData}` });
+      res.status(200).send(userData);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -85,7 +84,6 @@ const updateAvatar = (req, res) => {
     new: true, runValidators: true,
   })
     .then((userData) => {
-      console.log(userData.avatar);
       res.status(200).send(userData);
     })
     .catch((err) => {

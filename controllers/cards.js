@@ -13,7 +13,6 @@ const getCards = (_, res) => {
 const createCard = (req, res) => {
   const { name, link } = req.body;
   const owner = req.user._id;
-  console.log(name, link, owner);
 
   if (!name || !link) {
     return res.status(400).send({ message: 'Name or link are not correct' });
@@ -40,15 +39,21 @@ const deleteCard = (req, res) => {
     .then((card) => {
       if ((card.owner).toString() === user) {
         Card.findByIdAndRemove(cardId)
-          .then((card) => {
-            res.status(200).send({ message: `${card.name} deleted` });
+          .then((currentCard) => {
+            res.status(200).send({ message: `${currentCard.name} deleted` });
           });
       } else {
         return res.status(500).send({ message: 'You are not card owner' });
       }
     })
-    .catch(() => {
-      res.status(400).send({ message: 'Card not found or id is not correct' });
+    .catch((err) => {
+      if (err.name === 'TypeError') {
+        return res.status(404).send({ message: 'Card is not correct' });
+      }
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Card id not found' });
+      }
+      return res.status(500).send({ message: 'Server error' });
     });
 };
 
