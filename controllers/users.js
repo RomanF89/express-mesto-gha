@@ -62,7 +62,8 @@ const upadateProfile = (req, res) => {
   })
     .then((userData) => {
       // console.log(userData);
-      res.status(200).send({ message: 'User data updated successfully'}); })
+      res.status(200).send({ message: `${userData}` });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
