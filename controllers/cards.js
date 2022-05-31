@@ -15,7 +15,7 @@ const createCard = (req, res) => {
   const owner = req.user._id;
 
   if (!name || !link) {
-    return res.status(400).send({ message: 'Name or link are not correct' });
+    res.status(400).send({ message: 'Name or link are not correct' });
   }
 
   Card.create({ name, link, owner })
@@ -43,7 +43,7 @@ const deleteCard = (req, res) => {
             res.status(200).send({ message: `${currentCard.name} deleted` });
           });
       } else {
-        return res.status(500).send({ message: 'You are not card owner' });
+        res.status(500).send({ message: 'You are not card owner' });
       }
     })
     .catch((err) => {
