@@ -16,13 +16,13 @@ const getUser = (req, res) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(400).send({ message: 'User data is not correct' });
+        return res.status(404).send({ message: 'User not found' });
       }
       res.status(200).send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
-        return res.status(404).send({ message: 'Id not found' });
+        return res.status(400).send({ message: 'Id not found' });
       }
       return res.status(500).send({ message: 'Id is not correct' });
     });
@@ -60,7 +60,9 @@ const upadateProfile = (req, res) => {
   User.findByIdAndUpdate(userId, { name: userName, about: userAbout }, {
     new: true, runValidators: true,
   })
-    .then((userData) => { res.status(201).send({ message: `${userData.name} ${userData.about} User data updated successfully` }); })
+    .then((userData) => {
+      console.log(userData);
+      res.status(200).send({ message: `${userData.name} ${userData.about} User data updated successfully` }); })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
@@ -81,7 +83,9 @@ const updateAvatar = (req, res) => {
   User.findByIdAndUpdate(userId, { avatar: userAvatar }, {
     new: true, runValidators: true,
   })
-    .then((userData) => { res.status(201).send({ message: `${userData.avatar} User avatar upadted successfully` }); })
+    .then((userData) => {
+      console.log(userData.avatar);
+      res.status(200).send({ message: `${userData.avatar} User avatar upadted successfully` }); })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
