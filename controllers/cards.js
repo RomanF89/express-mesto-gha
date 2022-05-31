@@ -26,7 +26,7 @@ const createCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(404).send({ message: `${fields} are not correct` });
+        return res.status(400).send({ message: `${fields} are not correct` });
       }
       return res.status(500).send({ message: 'Id is not correct' });
     });
@@ -48,7 +48,7 @@ const deleteCard = (req, res) => {
       }
     })
     .catch(() => {
-      res.status(400).send({ message: 'Card not found or id is not correct' });
+      res.status(404).send({ message: 'Card not found or id is not correct' });
     });
 };
 
@@ -56,15 +56,14 @@ const likeCard = (req, res) => {
   const user = req.user._id;
   const { cardId } = req.params;
 
-  if (!cardId) {
-    return res.status(404).send({ message: 'Card is not correct' });
-  }
-
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: user } }, { new: true })
     .then((card) => {
       res.status(201).send({ message: `${card.name} liked` });
     })
     .catch((err) => {
+      if (err.name === 'TypeError') {
+        return res.status(404).send({ message: 'Card is not correct' });
+      }
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Card id not found' });
       }
@@ -75,15 +74,15 @@ const likeCard = (req, res) => {
 const dislikeCard = (req, res) => {
   const user = req.user._id;
   const { cardId } = req.params;
-  if (!cardId) {
-    return res.status(404).send({ message: 'Card is not correct' });
-  }
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: user } }, { new: true })
     .then((card) => {
       res.status(200).send({ message: `${card.name} disliked` });
     })
     .catch((err) => {
+      if (err.name === 'TypeError') {
+        return res.status(404).send({ message: 'Card is not correct' });
+      }
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Card id not found' });
       }
