@@ -7,14 +7,19 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "lint": "npx eslint"
+    "lint": "npx eslint ."
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RomanF89/express-mesto-gha.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "backend",
+    "mongoose",
+    "Mesto",
+    "mongoDB"
+  ],
+  "author": "Roman Faritov",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/RomanF89/express-mesto-gha/issues"

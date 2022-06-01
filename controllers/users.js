@@ -16,15 +16,15 @@ const getUser = (req, res) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: 'User not found' });
+        return res.status(404).send({ message: 'User not found' });
       }
-      res.status(200).send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
-        return res.status(400).send({ message: 'Id not found' });
+        return res.status(400).send({ message: 'Id is not correct' });
       }
-      return res.status(500).send({ message: 'Id is not correct' });
+      return res.status(500).send({ message: 'Server error' });
     });
 };
 
@@ -32,10 +32,10 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   if (!name || !about || !avatar) {
-    res.status(400).send({ message: 'Name, about or avatar are not correct' });
+    return res.status(400).send({ message: 'Name, about or avatar are not correct' });
   }
 
-  User.create({ name, about, avatar })
+  return User.create({ name, about, avatar })
     .then((user) => {
       res.status(201).send(user);
     })
@@ -54,10 +54,10 @@ const upadateProfile = (req, res) => {
   const userAbout = req.body.about;
 
   if (!userName || !userAbout) {
-    res.status(400).send({ message: 'Name or about are not correct' });
+    return res.status(400).send({ message: 'Name or about are not correct' });
   }
 
-  User.findByIdAndUpdate(userId, { name: userName, about: userAbout }, {
+  return User.findByIdAndUpdate(userId, { name: userName, about: userAbout }, {
     new: true, runValidators: true,
   })
     .then((userData) => {
@@ -66,7 +66,7 @@ const upadateProfile = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(404).send({ message: `${fields} are not correct` });
+        return res.status(400).send({ message: `${fields} are not correct` });
       }
       return res.status(500).send({ message: 'Server error' });
     });
@@ -77,10 +77,10 @@ const updateAvatar = (req, res) => {
   const userAvatar = req.body.avatar;
 
   if (!userAvatar) {
-    res.status(400).send({ message: 'user avatar is not correct' });
+    return res.status(400).send({ message: 'user avatar is not correct' });
   }
 
-  User.findByIdAndUpdate(userId, { avatar: userAvatar }, {
+  return User.findByIdAndUpdate(userId, { avatar: userAvatar }, {
     new: true, runValidators: true,
   })
     .then((userData) => {
@@ -89,7 +89,7 @@ const updateAvatar = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(404).send({ message: `${fields} are not correct` });
+        return res.status(400).send({ message: `${fields} are not correct` });
       }
       return res.status(500).send({ message: 'Server error' });
     });
