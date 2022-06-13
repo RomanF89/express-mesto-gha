@@ -7,7 +7,12 @@ const { BadAuthError } = require('../errors/badAuthError');
 const { ConflictingRequestError } = require('../errors/conflictingRequestError');
 
 const getUsers = (_, res, next) => {
-  User.find({})
+  User.find({}, {
+    name: 1,
+    avatar: 1,
+    email: 1,
+    about: 1,
+  })
     .then((users) => {
       res.status(200).send(users);
     })
@@ -19,7 +24,12 @@ const getUsers = (_, res, next) => {
 const getUser = (req, res, next) => {
   const { userId } = req.params;
 
-  User.findById(userId)
+  User.findById(userId, {
+    name: 1,
+    avatar: 1,
+    email: 1,
+    about: 1,
+  })
     .then((user) => {
       if (!user) {
         next(new NotFoundError('User not found'));
@@ -84,7 +94,9 @@ const upadateProfile = (req, res, next) => {
     new: true, runValidators: true,
   })
     .then((userData) => {
-      res.status(200).send(userData);
+      const resUser = userData.toObject();
+      delete resUser.password;
+      res.status(200).send(resUser);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -107,7 +119,9 @@ const updateAvatar = (req, res, next) => {
     new: true, runValidators: true,
   })
     .then((userData) => {
-      res.status(200).send(userData);
+      const resUser = userData.toObject();
+      delete resUser.password;
+      res.status(200).send(resUser);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {

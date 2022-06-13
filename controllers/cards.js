@@ -2,6 +2,8 @@ const Card = require('../models/Card');
 const { NotFoundError } = require('../errors/notFoundError');
 const { BadRequestError } = require('../errors/badRequestError');
 const { BadAuthError } = require('../errors/badAuthError');
+const { ForbiddenError } = require('../errors/forbiddenError');
+const { ForbiddenError } = require('../errors/forbiddenError')
 
 const getCards = (_, res, next) => {
   Card.find({})
@@ -48,7 +50,7 @@ const deleteCard = (req, res, next) => {
             res.status(200).send({ message: `${currentCard.name} deleted` });
           });
       }
-      return next(new BadAuthError('You are not card owner'));
+      return next(new ForbiddenError('You are not card owner'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
