@@ -12,7 +12,11 @@ router.get('/', getUsers);
 
 router.get('/me', getAuthorizedUser);
 
-router.get('/:userId', getUser);
+router.get('/:userId', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().alphanum(),
+  }),
+}), getUser);
 
 router.patch('/me', celebrate({
   body: Joi.object().keys({

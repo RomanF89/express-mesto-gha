@@ -20,8 +20,7 @@ const createCard = (req, res, next) => {
   if (!name || !link) {
     next(new BadRequestError('Name or link are not correct'));
   }
-
-  return Card.create({ name, link, owner })
+  Card.create({ name, link, owner })
     .then((card) => {
       res.status(200).send(card);
     })

@@ -28,7 +28,7 @@ const getUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
-        next(new BadRequestError('Id is not correctt'));
+        next(new BadRequestError('Id is not correct'));
       }
       next(err);
     });
@@ -55,9 +55,9 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then((user) => {
-      const newUser = user.toObject();
-      delete newUser.password;
-      res.status(201).send(newUser);
+      const resUser = user.toObject();
+      delete resUser.password;
+      res.status(201).send(resUser);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -123,23 +123,23 @@ const login = (req, res, next) => {
   if (!email || !password) {
     next(new BadRequestError('email or password not found'));
   }
-
-  return User.findOne({ email }).select('+password')
+  return User.findOne({ email })
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-key');
       if (!user) {
         next(new BadAuthError('email or password are incorrect'));
       }
+      const token = jwt.sign({ _id: user._id }, 'secret-key');
       return { matched: bcrypt.compare(password, user.password), userToken: token };
     })
     .then((data) => {
       if (!data.matched) {
         next(new BadAuthError('email or password are incorrect'));
       }
-      return res.cookie('jwt', data.userToken, {
+      res.cookie('jwt', data.userToken, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
-      })
+      });
+      res.send({ message: 'Success' })
         .end();
     })
     .catch((err) => {
@@ -159,7 +159,9 @@ const getAuthorizedUser = (req, res, next) => {
       if (!user) {
         next(new NotFoundError('User not found'));
       }
-      return res.status(200).send({ message: `${user.name} ${user.about}` });
+      const resUser = user.toObject();
+      delete resUser.password;
+      res.status(200).send(resUser);
     })
     .catch((err) => {
       next(err);

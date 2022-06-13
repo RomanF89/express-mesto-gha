@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: 'https://avatars.mds.yandex.net/i?id=1be4416d747cb9a0c1f15955da100268-4828150-images-thumbs&n=13',
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(v) {
         return /^https{0,1}:\/\/(www\.){0,1}([a-z0-9-]\.?)+(\.(ru)|(com)|(net)){1}([^\w\W]|((\/[a-z0-9-._\]~:?#[@!&'()*+,;=$]+)+)?)$/.test(v);
@@ -38,7 +38,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false,
   },
 }, {
   versionKey: false,
