@@ -1,21 +1,24 @@
 const Card = require('../models/Card');
+const { NotFoundError } = require('../errors/notFoundError');
+const { BadRequestError } = require('../errors/badRequestError');
+const { BadAuthError } = require('../errors/badAuthError');
 
-const getCards = (_, res) => {
+const getCards = (_, res, next) => {
   Card.find({})
     .then((cards) => {
       res.status(200).send(cards);
     })
-    .catch(() => {
-      res.status(500).send({ message: 'Server error' });
+    .catch((err) => {
+      next(err);
     });
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   if (!name || !link) {
-    return res.status(400).send({ message: 'Name or link are not correct' });
+    next(new BadRequestError('Name or link are not correct'));
   }
 
   return Card.create({ name, link, owner })
@@ -25,20 +28,20 @@ const createCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(400).send({ message: `${fields} are not correct` });
+        next(new BadRequestError(`${fields} are not correct`));
       }
-      return res.status(500).send({ message: 'Id is not correct' });
+      next(err);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   const user = req.user._id;
 
   Card.findOne({ _id: cardId })
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Card is not correct' });
+        next(new NotFoundError('Card is not correct'));
       }
       if ((card.owner).toString() === user) {
         return Card.findByIdAndRemove(cardId)
@@ -46,51 +49,51 @@ const deleteCard = (req, res) => {
             res.status(200).send({ message: `${currentCard.name} deleted` });
           });
       }
-      return res.status(500).send({ message: 'You are not card owner' });
+      return next(new BadAuthError('You are not card owner'));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Card id is not correct' });
+        next(new BadRequestError('Card id is not correct'));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
     });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   const user = req.user._id;
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: user } }, { new: true })
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Card is not correct' });
+        next(new NotFoundError('Card is not correct'));
       }
       return res.status(201).send({ message: `${card.name} liked` });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Card id is not correct' });
+        next(new BadRequestError('Card id is not correct'));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
     });
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   const user = req.user._id;
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: user } }, { new: true })
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Card is not correct' });
+        next(new NotFoundError('Card is not correct'));
       }
       return res.status(200).send({ message: `${card.name} disliked` });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Card id is not correct' });
+        next(new BadRequestError('Card id is not correct'));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
     });
 };
 

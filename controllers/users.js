@@ -1,60 +1,81 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { NotFoundError } = require('../errors/notFoundError');
+const { BadRequestError } = require('../errors/badRequestError');
+const { BadAuthError } = require('../errors/badAuthError');
+const { ConflictingRequestError } = require('../errors/conflictingRequestError');
 
-const getUsers = (_, res) => {
+const getUsers = (_, res, next) => {
   User.find({})
     .then((users) => {
       res.status(200).send(users);
     })
-    .catch(() => {
-      res.status(500).send({ message: 'Server error' });
+    .catch((err) => {
+      next(err);
     });
 };
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+        next(new NotFoundError('User not found'));
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
-        return res.status(400).send({ message: 'Id is not correct' });
+        next(new BadRequestError('Id is not correctt'));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+const createUser = (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
 
-  if (!name || !about || !avatar) {
-    return res.status(400).send({ message: 'Name, about or avatar are not correct' });
+  if (!name || !about || !avatar || !email || !password) {
+    next(new BadRequestError('Name, about, avatar, password or email are not correct'));
   }
-
-  return User.create({ name, about, avatar })
+  return bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((user) => {
       res.status(201).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(400).send({ message: `${fields} are not correct` });
+        next(new BadRequestError(`${fields} are not correct`));
       }
-      return res.status(500).send({ message: 'Server error' });
+      if (err.code === 11000) {
+        next(new ConflictingRequestError('This email already exists'));
+      }
+      next(err);
     });
 };
 
-const upadateProfile = (req, res) => {
+const upadateProfile = (req, res, next) => {
   const userId = req.user._id;
   const userName = req.body.name;
   const userAbout = req.body.about;
 
   if (!userName || !userAbout) {
-    return res.status(400).send({ message: 'Name or about are not correct' });
+    next(new BadRequestError('Name or about are not correct'));
   }
 
   return User.findByIdAndUpdate(userId, { name: userName, about: userAbout }, {
@@ -66,18 +87,18 @@ const upadateProfile = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(400).send({ message: `${fields} are not correct` });
+        next(new BadRequestError(`${fields} are not correct`));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
     });
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const userId = req.user._id;
   const userAvatar = req.body.avatar;
 
   if (!userAvatar) {
-    return res.status(400).send({ message: 'user avatar is not correct' });
+    next(new BadRequestError('user avatar is not correct'));
   }
 
   return User.findByIdAndUpdate(userId, { avatar: userAvatar }, {
@@ -89,9 +110,57 @@ const updateAvatar = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const fields = Object.keys(err.errors).join(', ');
-        return res.status(400).send({ message: `${fields} are not correct` });
+        next(new BadRequestError(`${fields} are not correct`));
       }
-      return res.status(500).send({ message: 'Server error' });
+      next(err);
+    });
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    next(new BadRequestError('email or password not found'));
+  }
+
+  return User.findOne({ email }).select('+password')
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'secret-key');
+      if (!user) {
+        next(new BadAuthError('email or password are incorrect'));
+      }
+      return { matched: bcrypt.compare(password, user.password), userToken: token };
+    })
+    .then((data) => {
+      if (!data.matched) {
+        next(new BadAuthError('email or password are incorrect'));
+      }
+      return res.cookie('jwt', data.userToken, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      })
+        .end();
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+const getAuthorizedUser = (req, res, next) => {
+  const authorizedUser = req.user._id;
+
+  if (!authorizedUser) {
+    next(new BadRequestError('You are not authorized'));
+  }
+
+  return User.findById(authorizedUser)
+    .then((user) => {
+      if (!user) {
+        next(new NotFoundError('User not found'));
+      }
+      return res.status(200).send({ message: `${user.name} ${user.about}` });
+    })
+    .catch((err) => {
+      next(err);
     });
 };
 
@@ -101,4 +170,6 @@ module.exports = {
   getUsers,
   upadateProfile,
   updateAvatar,
+  login,
+  getAuthorizedUser,
 };
