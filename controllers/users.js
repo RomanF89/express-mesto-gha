@@ -43,7 +43,7 @@ const createUser = (req, res, next) => {
     password,
   } = req.body;
 
-  if (!name || !about || !avatar || !email || !password) {
+  if (!email || !password) {
     next(new BadRequestError('Name, about, avatar, password or email are not correct'));
   }
   return bcrypt.hash(password, 10)
