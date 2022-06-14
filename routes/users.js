@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
+const { ObjectId } = require('mongoose').Types.ObjectId;
+
 const {
   getUser,
   getUsers,
@@ -14,7 +16,12 @@ router.get('/me', getAuthorizedUser);
 
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().alphanum(),
+    userId: Joi.string().custom((value, helpers) => {
+      if (ObjectId.isValid(value)) {
+        return value;
+      }
+      return helpers.error('any.invalid');
+    }),
   }),
 }), getUser);
 
