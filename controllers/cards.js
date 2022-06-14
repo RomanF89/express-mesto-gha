@@ -40,7 +40,7 @@ const deleteCard = (req, res, next) => {
   Card.findOne({ _id: cardId })
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('Card is not correct'));
+        return next(new NotFoundError('Card is not correct'));
       }
       if ((card.owner).toString() === user) {
         return Card.findByIdAndRemove(cardId)
@@ -65,7 +65,7 @@ const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: user } }, { new: true })
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('Card is not correct'));
+        return next(new NotFoundError('Card is not correct'));
       }
       return res.status(201).send({ message: `${card.name} liked` });
     })
@@ -84,7 +84,7 @@ const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(cardId, { $pull: { likes: user } }, { new: true })
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('Card is not correct'));
+        return next(new NotFoundError('Card is not correct'));
       }
       return res.status(200).send({ message: `${card.name} disliked` });
     })

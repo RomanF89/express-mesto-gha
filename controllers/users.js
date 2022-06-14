@@ -32,7 +32,7 @@ const getUser = (req, res, next) => {
   })
     .then((user) => {
       if (!user) {
-        next(new NotFoundError('User not found'));
+        return next(new NotFoundError('User not found'));
       }
       return res.status(200).send(user);
     })
@@ -53,9 +53,6 @@ const createUser = (req, res, next) => {
     password,
   } = req.body;
 
-  if (!email || !password) {
-    next(new BadRequestError('Name, about, avatar, password or email are not correct'));
-  }
   return bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name,
@@ -86,10 +83,6 @@ const upadateProfile = (req, res, next) => {
   const userName = req.body.name;
   const userAbout = req.body.about;
 
-  if (!userName || !userAbout) {
-    next(new BadRequestError('Name or about are not correct'));
-  }
-
   return User.findByIdAndUpdate(userId, { name: userName, about: userAbout }, {
     new: true, runValidators: true,
   })
@@ -110,10 +103,6 @@ const upadateProfile = (req, res, next) => {
 const updateAvatar = (req, res, next) => {
   const userId = req.user._id;
   const userAvatar = req.body.avatar;
-
-  if (!userAvatar) {
-    next(new BadRequestError('user avatar is not correct'));
-  }
 
   return User.findByIdAndUpdate(userId, { avatar: userAvatar }, {
     new: true, runValidators: true,
@@ -137,19 +126,22 @@ const login = (req, res, next) => {
   if (!email || !password) {
     next(new BadRequestError('email or password not found'));
   }
-  return User.findOne({ email })
+  return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        next(new BadAuthError('email or password are incorrect'));
+        return next(new BadAuthError('email or password are incorrect'));
       }
-      const token = jwt.sign({ _id: user._id }, 'secret-key');
-      return { matched: bcrypt.compare(password, user.password), userToken: token };
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return next(new BadAuthError('email or password are incorrect'));
+          }
+          return user;
+        });
     })
-    .then((data) => {
-      if (!data.matched) {
-        next(new BadAuthError('email or password are incorrect'));
-      }
-      res.cookie('jwt', data.userToken, {
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'secret-key');
+      res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
       });
@@ -163,10 +155,6 @@ const login = (req, res, next) => {
 
 const getAuthorizedUser = (req, res, next) => {
   const authorizedUser = req.user._id;
-
-  if (!authorizedUser) {
-    next(new BadRequestError('You are not authorized'));
-  }
 
   return User.findById(authorizedUser)
     .then((user) => {
