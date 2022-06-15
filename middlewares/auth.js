@@ -2,12 +2,8 @@ const jwt = require('jsonwebtoken');
 const { BadAuthError } = require('../errors/badAuthError');
 
 const auth = (req, res, next) => {
-  const { cookie } = req.headers;
+  const token = req.cookies.jwt;
 
-  if (!cookie) {
-    next(new BadAuthError('Need authorization'));
-  }
-  const token = cookie.replace('jwt=', '');
   let payload;
   try {
     payload = jwt.verify(token, 'secret-key');

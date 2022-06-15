@@ -14,7 +14,7 @@ const getUsers = (_, res, next) => {
     about: 1,
   })
     .then((users) => {
-      res.status(200).send(users);
+      res.send(users);
     })
     .catch((err) => {
       next(err);
@@ -34,7 +34,7 @@ const getUser = (req, res, next) => {
       if (!user) {
         return next(new NotFoundError('User not found'));
       }
-      return res.status(200).send(user);
+      return res.send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
@@ -89,7 +89,7 @@ const upadateProfile = (req, res, next) => {
     .then((userData) => {
       const resUser = userData.toObject();
       delete resUser.password;
-      res.status(200).send(resUser);
+      res.send(resUser);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -110,7 +110,7 @@ const updateAvatar = (req, res, next) => {
     .then((userData) => {
       const resUser = userData.toObject();
       delete resUser.password;
-      res.status(200).send(resUser);
+      res.send(resUser);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -163,7 +163,7 @@ const getAuthorizedUser = (req, res, next) => {
       }
       const resUser = user.toObject();
       delete resUser.password;
-      res.status(200).send(resUser);
+      res.send(resUser);
     })
     .catch((err) => {
       next(err);

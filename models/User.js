@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validation = require('validator');
+const { urlRegex } = require('../validation/regex');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -19,7 +20,7 @@ const userSchema = new mongoose.Schema({
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(v) {
-        return /^https{0,1}:\/\/(www\.){0,1}([a-z0-9-]\.?)+(\.([a-z]{2,})){1}([^\w\W]|((\/[a-z0-9-._\]~:?#[@!&'()*+,;=$]+)+)?)$/.test(v);
+        return urlRegex.test(v);
       },
       message: (props) => `${props.value} URL is not correct!`,
     },

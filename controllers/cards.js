@@ -6,7 +6,7 @@ const { ForbiddenError } = require('../errors/forbiddenError');
 const getCards = (_, res, next) => {
   Card.find({})
     .then((cards) => {
-      res.status(200).send(cards);
+      res.send(cards);
     })
     .catch((err) => {
       next(err);
@@ -17,12 +17,9 @@ const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
-  if (!name || !link) {
-    next(new BadRequestError('Name or link are not correct'));
-  }
   Card.create({ name, link, owner })
     .then((card) => {
-      res.status(200).send(card);
+      res.send(card);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -45,7 +42,7 @@ const deleteCard = (req, res, next) => {
       if ((card.owner).toString() === user) {
         return Card.findByIdAndRemove(cardId)
           .then((currentCard) => {
-            res.status(200).send({ message: `${currentCard.name} deleted` });
+            res.send({ message: `${currentCard.name} deleted` });
           });
       }
       return next(new ForbiddenError('You are not card owner'));
@@ -86,7 +83,7 @@ const dislikeCard = (req, res, next) => {
       if (!card) {
         return next(new NotFoundError('Card is not correct'));
       }
-      return res.status(200).send({ message: `${card.name} disliked` });
+      return res.send({ message: `${card.name} disliked` });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
